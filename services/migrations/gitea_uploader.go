@@ -101,6 +101,7 @@ func (g *GiteaLocalUploader) CreateRepo(ctx context.Context, repo *base.Reposito
 	if opts.MigrateToRepoID <= 0 {
 		r, err = repo_service.CreateRepositoryDirectly(ctx, g.doer, owner, repo_service.CreateRepoOptions{
 			Name:           g.repoName,
+			Subject:        opts.Subject,
 			Description:    repo.Description,
 			OriginalURL:    repo.OriginalURL,
 			GitServiceType: opts.GitServiceType,
@@ -119,6 +120,7 @@ func (g *GiteaLocalUploader) CreateRepo(ctx context.Context, repo *base.Reposito
 
 	r, err = repo_service.MigrateRepositoryGitData(ctx, owner, r, base.MigrateOptions{
 		RepoName:       g.repoName,
+		Subject:        opts.Subject,
 		Description:    repo.Description,
 		OriginalURL:    repo.OriginalURL,
 		GitServiceType: opts.GitServiceType,
