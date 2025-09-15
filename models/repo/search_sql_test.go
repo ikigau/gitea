@@ -24,23 +24,23 @@ func TestSearchOrderByConstants(t *testing.T) {
 		expected []string
 	}{
 		{
-			name:    "SearchOrderByScore",
-			orderBy: db.SearchOrderByScore,
+			name:     "SearchOrderByScore",
+			orderBy:  db.SearchOrderByScore,
 			expected: []string{"relevance_score", "ASC", "CASE", "subject", "name"},
 		},
 		{
-			name:    "SearchOrderByScoreReverse",
-			orderBy: db.SearchOrderByScoreReverse,
+			name:     "SearchOrderByScoreReverse",
+			orderBy:  db.SearchOrderByScoreReverse,
 			expected: []string{"relevance_score", "DESC", "CASE", "subject", "name"},
 		},
 		{
-			name:    "SearchOrderBySubjectAlphabetically",
-			orderBy: db.SearchOrderBySubjectAlphabetically,
+			name:     "SearchOrderBySubjectAlphabetically",
+			orderBy:  db.SearchOrderBySubjectAlphabetically,
 			expected: []string{"CASE", "subject", "name", "ASC"},
 		},
 		{
-			name:    "SearchOrderBySubjectReverse",
-			orderBy: db.SearchOrderBySubjectReverse,
+			name:     "SearchOrderBySubjectReverse",
+			orderBy:  db.SearchOrderBySubjectReverse,
 			expected: []string{"CASE", "subject", "name", "DESC"},
 		},
 	}
@@ -49,7 +49,7 @@ func TestSearchOrderByConstants(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			sqlStr := string(tc.orderBy)
 			for _, expected := range tc.expected {
-				assert.Contains(t, sqlStr, expected, 
+				assert.Contains(t, sqlStr, expected,
 					"SQL string for %s should contain '%s'", tc.name, expected)
 			}
 		})
@@ -74,9 +74,9 @@ func TestRelevanceScoreSQL(t *testing.T) {
 	assert.Contains(t, reverseScoreSQL, "relevance_score DESC", "Reverse score SQL should order relevance_score DESC")
 
 	// Both should have same secondary ordering (alphabetical by display name)
-	assert.Contains(t, scoreSQL, "CASE WHEN subject != '' THEN subject ELSE name END ASC", 
+	assert.Contains(t, scoreSQL, "CASE WHEN subject != '' THEN subject ELSE name END ASC",
 		"Score SQL should have alphabetical secondary ordering")
-	assert.Contains(t, reverseScoreSQL, "CASE WHEN subject != '' THEN subject ELSE name END ASC", 
+	assert.Contains(t, reverseScoreSQL, "CASE WHEN subject != '' THEN subject ELSE name END ASC",
 		"Reverse score SQL should have alphabetical secondary ordering")
 }
 
@@ -99,7 +99,7 @@ func TestSubjectFieldSearchIntegration(t *testing.T) {
 	// Verify that search returns results (assuming test data exists)
 	if count > 0 {
 		assert.NotEmpty(t, repos, "Should return repositories when keyword matches")
-		
+
 		// Verify that repositories have the expected fields
 		for _, repo := range repos {
 			assert.NotEmpty(t, repo.Name, "Repository should have a name")
@@ -116,28 +116,28 @@ func TestKeywordSearchConditions(t *testing.T) {
 
 	// Test various keyword search scenarios
 	testCases := []struct {
-		name    string
-		keyword string
+		name        string
+		keyword     string
 		description string
 	}{
 		{
-			name:    "SingleKeyword",
-			keyword: "test",
+			name:        "SingleKeyword",
+			keyword:     "test",
 			description: "Single keyword should search both name and subject",
 		},
 		{
-			name:    "MultipleKeywords",
-			keyword: "test,repo",
+			name:        "MultipleKeywords",
+			keyword:     "test,repo",
 			description: "Multiple keywords should search both name and subject for each term",
 		},
 		{
-			name:    "EmptyKeyword",
-			keyword: "",
+			name:        "EmptyKeyword",
+			keyword:     "",
 			description: "Empty keyword should not cause errors",
 		},
 		{
-			name:    "SpecialCharacters",
-			keyword: "test-repo",
+			name:        "SpecialCharacters",
+			keyword:     "test-repo",
 			description: "Keywords with special characters should work",
 		},
 	}
@@ -151,14 +151,14 @@ func TestKeywordSearchConditions(t *testing.T) {
 				Private:     true,
 			}
 
-			repos, count, err := repo_model.SearchRepository(context.Background(), opts)
+			_, count, err := repo_model.SearchRepository(context.Background(), opts)
 			require.NoError(t, err, "SearchRepository should not return an error for %s", tc.description)
-			
+
 			// For non-empty keywords, we expect the search to complete successfully
 			// (results may be empty if no matches, but no errors should occur)
 			if tc.keyword != "" {
 				assert.GreaterOrEqual(t, count, int64(0), "Count should be non-negative")
-				assert.GreaterOrEqual(t, len(repos), 0, "Repository list should be non-negative length")
+				// Repository list length is always non-negative by definition, no need to assert
 			}
 		})
 	}
@@ -180,7 +180,7 @@ func TestDefaultOrderingWithKeywords(t *testing.T) {
 
 	repos, count, err := repo_model.SearchRepository(context.Background(), optsWithKeyword)
 	require.NoError(t, err, "SearchRepository with keyword should not return an error")
-	
+
 	if count > 0 {
 		assert.NotEmpty(t, repos, "Should return repositories when keyword search finds matches")
 	}
@@ -196,7 +196,7 @@ func TestDefaultOrderingWithKeywords(t *testing.T) {
 
 	reposNoKeyword, countNoKeyword, err := repo_model.SearchRepository(context.Background(), optsWithoutKeyword)
 	require.NoError(t, err, "SearchRepository without keyword should not return an error")
-	assert.Greater(t, countNoKeyword, int64(0), "Should find repositories without keyword")
+	assert.Positive(t, countNoKeyword, "Should find repositories without keyword")
 	assert.NotEmpty(t, reposNoKeyword, "Should return repositories without keyword")
 }
 
@@ -270,12 +270,12 @@ func TestSearchWithOrgRepoPattern(t *testing.T) {
 		Private:     true,
 	}
 
-	repos, count, err := repo_model.SearchRepository(context.Background(), opts)
+	_, count, err := repo_model.SearchRepository(context.Background(), opts)
 	require.NoError(t, err, "SearchRepository with org/repo pattern should not return an error")
-	
+
 	// The search should complete successfully regardless of whether matches are found
 	assert.GreaterOrEqual(t, count, int64(0), "Count should be non-negative")
-	assert.GreaterOrEqual(t, len(repos), 0, "Repository list should be non-negative length")
+	// Repository list length is always non-negative by definition, no need to assert
 }
 
 func TestSearchWithIncludeDescription(t *testing.T) {
@@ -293,10 +293,10 @@ func TestSearchWithIncludeDescription(t *testing.T) {
 		Private:            true,
 	}
 
-	repos, count, err := repo_model.SearchRepository(context.Background(), opts)
+	_, count, err := repo_model.SearchRepository(context.Background(), opts)
 	require.NoError(t, err, "SearchRepository with description inclusion should not return an error")
-	
+
 	// Verify that search completes successfully
 	assert.GreaterOrEqual(t, count, int64(0), "Count should be non-negative")
-	assert.GreaterOrEqual(t, len(repos), 0, "Repository list should be non-negative length")
+	// Repository list length is always non-negative by definition, no need to assert
 }

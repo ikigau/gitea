@@ -68,14 +68,10 @@ func TestBuildRelevanceScoreSQL(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			// We can't directly test the private function, but we can test the behavior
-			// by checking that the SQL contains the expected patterns
-			if tc.keyword == "" {
-				// For empty keywords, relevance scoring should not be applied
-				assert.True(t, true, "Empty keyword test passed")
-			} else {
-				// For non-empty keywords, relevance scoring should be applied
-				assert.True(t, true, "Non-empty keyword test passed")
-			}
+			// by checking that the SQL contains the expected patterns.
+			// For empty keywords, relevance scoring should not be applied.
+			// For non-empty keywords, relevance scoring should be applied.
+			// Test passes by reaching this point without error for both cases.
 		})
 	}
 }
@@ -83,23 +79,23 @@ func TestBuildRelevanceScoreSQL(t *testing.T) {
 func TestScoreSortingWithMockData(t *testing.T) {
 	// Test score sorting behavior with mock repository data
 	testRepos := []struct {
-		name    string
-		subject string
-		keyword string
+		name          string
+		subject       string
+		keyword       string
 		expectedScore int
 	}{
 		// Test exact matches
 		{"moon", "Moon", "moon", 1},
 		{"project", "", "project", 1}, // exact match in name when no subject
-		
+
 		// Test prefix matches
 		{"moon-landing", "Moon Landing", "moon", 2},
 		{"project-alpha", "Project Alpha", "project", 2},
-		
+
 		// Test substring matches
 		{"dark-side-moon", "The Dark Side of The Moon", "moon", 3},
 		{"my-project-repo", "My Project Repository", "project", 3},
-		
+
 		// Test no matches
 		{"lunar-mission", "Lunar Mission", "moon", 4},
 		{"space-exploration", "Space Exploration", "project", 4},
@@ -108,8 +104,8 @@ func TestScoreSortingWithMockData(t *testing.T) {
 	for _, repo := range testRepos {
 		t.Run(repo.name, func(t *testing.T) {
 			score := calculateMockRelevanceScore(repo.name, repo.subject, repo.keyword)
-			assert.Equal(t, repo.expectedScore, score, 
-				"Repository %s with subject '%s' should have score %d for keyword '%s'", 
+			assert.Equal(t, repo.expectedScore, score,
+				"Repository %s with subject '%s' should have score %d for keyword '%s'",
 				repo.name, repo.subject, repo.expectedScore, repo.keyword)
 		})
 	}
@@ -118,15 +114,15 @@ func TestScoreSortingWithMockData(t *testing.T) {
 func TestMultipleKeywordScoring(t *testing.T) {
 	// Test scoring with multiple comma-separated keywords
 	testCases := []struct {
-		name     string
-		subject  string
-		keywords string
+		name               string
+		subject            string
+		keywords           string
 		expectedTotalScore int
 	}{
-		{"moon-landing", "Moon Landing", "moon,landing", 4}, // 2 + 2 (both prefix matches)
-		{"apollo-moon", "Apollo Moon Program", "moon,landing", 7}, // 3 + 4 (substring + no match)
+		{"moon-landing", "Moon Landing", "moon,landing", 4},           // 2 + 2 (both prefix matches)
+		{"apollo-moon", "Apollo Moon Program", "moon,landing", 7},     // 3 + 4 (substring + no match)
 		{"space-landing", "Space Landing Mission", "moon,landing", 6}, // 4 + 2 (no match + prefix)
-		{"mars-rover", "Mars Rover Project", "moon,landing", 8}, // 4 + 4 (no match + no match)
+		{"mars-rover", "Mars Rover Project", "moon,landing", 8},       // 4 + 4 (no match + no match)
 	}
 
 	for _, tc := range testCases {
@@ -149,11 +145,11 @@ func TestMultipleKeywordScoring(t *testing.T) {
 func TestSubjectFieldPriority(t *testing.T) {
 	// Test that subject field takes priority over name field
 	testCases := []struct {
-		name           string
-		subject        string
-		keyword        string
-		expectedScore  int
-		description    string
+		name          string
+		subject       string
+		keyword       string
+		expectedScore int
+		description   string
 	}{
 		{"moon-project", "Sun Project", "moon", 4, "subject doesn't match, name matches - should use subject"},
 		{"sun-project", "Moon Project", "moon", 2, "subject matches as prefix, name doesn't - should use subject"},
@@ -172,18 +168,18 @@ func TestSubjectFieldPriority(t *testing.T) {
 // Helper function to simulate relevance scoring logic
 func calculateMockRelevanceScore(name, subject, keyword string) int {
 	keyword = strings.ToLower(strings.TrimSpace(keyword))
-	
+
 	// Determine the display field (subject if available, otherwise name)
 	displayField := strings.ToLower(name)
 	if subject != "" {
 		displayField = strings.ToLower(subject)
 	}
-	
+
 	repoName := strings.ToLower(name)
-	
+
 	// Calculate score based on priority:
 	// 1 = exact match, 2 = prefix match, 3 = substring match, 4 = no match
-	
+
 	// Check display field first
 	if displayField == keyword {
 		return 1 // Exact match
@@ -194,7 +190,7 @@ func calculateMockRelevanceScore(name, subject, keyword string) int {
 	if strings.Contains(displayField, keyword) {
 		return 3 // Substring match
 	}
-	
+
 	// Check name field as fallback
 	if repoName == keyword {
 		return 1 // Exact match
@@ -205,7 +201,7 @@ func calculateMockRelevanceScore(name, subject, keyword string) int {
 	if strings.Contains(repoName, keyword) {
 		return 3 // Substring match
 	}
-	
+
 	return 4 // No match
 }
 
@@ -214,7 +210,7 @@ func TestScoreSortingIntegration(t *testing.T) {
 
 	// Test that score sorting works with the actual search infrastructure
 	user := unittest.AssertExistsAndLoadBean(t, &user_model.User{ID: 1})
-	
+
 	// Test with a keyword that should trigger relevance scoring
 	opts := repo_model.SearchRepoOptions{
 		ListOptions: db.ListOptions{PageSize: 10},
@@ -226,17 +222,17 @@ func TestScoreSortingIntegration(t *testing.T) {
 
 	repos, count, err := repo_model.SearchRepository(context.Background(), opts)
 	require.NoError(t, err, "SearchRepository should not return an error")
-	assert.Greater(t, count, int64(0), "Should find some repositories")
+	assert.Positive(t, count, "Should find some repositories")
 	assert.NotEmpty(t, repos, "Should return some repositories")
 
 	// Test reverse score sorting
 	optsReverse := opts
 	optsReverse.OrderBy = repo_model.OrderByFlatMap["reversescore"]
-	
+
 	reposReverse, countReverse, err := repo_model.SearchRepository(context.Background(), optsReverse)
 	require.NoError(t, err, "SearchRepository with reversescore should not return an error")
 	assert.Equal(t, count, countReverse, "Both sorting orders should return same count")
-	assert.Equal(t, len(repos), len(reposReverse), "Both sorting orders should return same number of repos")
+	assert.Len(t, reposReverse, len(repos), "Both sorting orders should return same number of repos")
 }
 
 func TestFallbackBehaviorWithoutKeyword(t *testing.T) {
@@ -250,14 +246,14 @@ func TestFallbackBehaviorWithoutKeyword(t *testing.T) {
 	opts := repo_model.SearchRepoOptions{
 		ListOptions: db.ListOptions{PageSize: 10},
 		Actor:       user,
-		Keyword:     "", // No keyword
+		Keyword:     "",                             // No keyword
 		OrderBy:     db.SearchOrderByAlphabetically, // Use alphabetical instead of score
 		Private:     true,
 	}
 
 	repos, count, err := repo_model.SearchRepository(context.Background(), opts)
 	require.NoError(t, err, "SearchRepository without keyword should not return an error")
-	assert.Greater(t, count, int64(0), "Should find some repositories")
+	assert.Positive(t, count, "Should find some repositories")
 	assert.NotEmpty(t, repos, "Should return some repositories")
 
 	// Verify that repositories are sorted (we can't easily verify the exact order without
