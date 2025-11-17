@@ -1,7 +1,7 @@
 import {
   dirname, basename, extname, isObject, stripTags, parseIssueHref,
   parseUrl, translateMonth, translateDay, blobToDataURI,
-  toAbsoluteUrl, encodeURLEncodedBase64, decodeURLEncodedBase64, isImageFile, isVideoFile, parseRepoOwnerPathInfo,
+  toAbsoluteUrl, encodeURLEncodedBase64, decodeURLEncodedBase64, isImageFile, isVideoFile, parseRepoOwnerPathInfo, clamp,
 } from './utils.ts';
 
 test('dirname', () => {
@@ -140,4 +140,13 @@ test('file detection', () => {
   for (const name of ['', 'a.mpg.x', '/path.mp4/x', 'webm']) {
     expect(isVideoFile({name})).toBeFalsy();
   }
+});
+
+test('clamp', () => {
+  expect(clamp(5, 0, 10)).toEqual(5);
+  expect(clamp(-5, 0, 10)).toEqual(0);
+  expect(clamp(15, 0, 10)).toEqual(10);
+  expect(clamp(0, 0, 10)).toEqual(0);
+  expect(clamp(10, 0, 10)).toEqual(10);
+  expect(clamp(7.5, 0, 10)).toEqual(7.5);
 });

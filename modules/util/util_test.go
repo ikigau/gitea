@@ -238,3 +238,12 @@ func TestOptionalArg(t *testing.T) {
 	assert.Equal(t, 42, bar(nil))
 	assert.Equal(t, 100, bar(nil, 100))
 }
+
+func TestFirstNonEmpty(t *testing.T) {
+	assert.Equal(t, "", FirstNonEmpty())
+	assert.Equal(t, "", FirstNonEmpty("", "", ""))
+	assert.Equal(t, "first", FirstNonEmpty("first", "second", "third"))
+	assert.Equal(t, "second", FirstNonEmpty("", "second", "third"))
+	assert.Equal(t, "third", FirstNonEmpty("", "", "third"))
+	assert.Equal(t, "value", FirstNonEmpty("", "", "", "value", ""))
+}

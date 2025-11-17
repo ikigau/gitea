@@ -226,6 +226,17 @@ func IfEmpty[T any](v, def []T) []T {
 	return v
 }
 
+// FirstNonEmpty returns the first non-empty string from the provided arguments.
+// If all arguments are empty, it returns an empty string.
+func FirstNonEmpty(values ...string) string {
+	for _, v := range values {
+		if v != "" {
+			return v
+		}
+	}
+	return ""
+}
+
 // OptionalArg helps the "optional argument" in Golang:
 //
 //	func foo(optArg ...int) { return OptionalArg(optArg) }
